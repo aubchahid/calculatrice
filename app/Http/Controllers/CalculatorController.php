@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Services\CalculatorService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 
 class CalculatorController extends Controller
 {
@@ -13,20 +16,13 @@ class CalculatorController extends Controller
         return view('calculator');
     }
 
-    public function calcul(Request $request)
+    public function calcul(Request $request, CalculatorService $calculatorService): JsonResponse
     {
-        $expression = $request->input('expression');
-
         try {
-
-            if (!preg_match('/^[0-9+\/*().\s-]+$/', $expression)) {
-                return response()->json(['result' => 'Invalid expression']);
-            }
-
-            $result = eval("return $expression;");
+            $result = $calculatorService->calculate($request->input('expression'));
             return response()->json(['result' => $result]);
-        } catch (\Throwable $e) {
-            return response()->json(['result' => 'Error']);
+        } catch (InvalidArgumentException) {
+            throw new InvalidArgumentException();
         }
     }
 }
